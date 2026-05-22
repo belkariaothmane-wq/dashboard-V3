@@ -508,8 +508,8 @@
       <div style="font-size:14px;line-height:1.7;color:var(--text)" id="mail-d-body"></div>
     </div>
     <div class="dtl-card">
-      <div class="dtl-card-title">Résumé IA</div>
-      <div style="font-size:13px;line-height:1.65;color:var(--text);font-style:italic" id="mail-d-reply"></div>
+      <div class="dtl-card-title">Réponse suggérée</div>
+      <div style="font-size:13px;line-height:1.75;color:var(--text);white-space:pre-line" id="mail-d-reply"></div>
     </div>
     <button class="btn-p" id="mail-d-btn-send" onclick="sendMailReply()">Envoyer cette réponse</button>
     <button class="btn-s" onclick="openSheet('edit-reply')">Modifier avant d'envoyer</button>
@@ -1269,7 +1269,7 @@ async function sendMailReply() {
   const btn = document.getElementById('mail-d-btn-send');
   btn.textContent = 'Envoi en cours...';
   btn.classList.add('loading');
-  const replyHtml = document.getElementById('mail-d-reply').innerHTML;
+  const replyHtml = document.getElementById('mail-d-reply').textContent;
   try {
     await handleSendMail(STATE.currentMail, replyHtml);
     btn.textContent = 'Envoyé';
@@ -1539,13 +1539,13 @@ async function handleSendMail(mailId, reponse) {
   const record = AIRTABLE_MAILS[mailId];
   if (!record) return; // mail de démo, pas d'envoi réel
   const f = record.fields;
+  const to = f.Expediteur || '';
+  const subject = 'Re: ' + (f.Objet || '');
+  const bodyHtml = (reponse || '').replace(/\n/g, '<br>');
   await fetch(SEND_REPLY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      gmail_id: f.ID_Gmail || '',
-      body: reponse || ''
-    })
+    body: JSON.stringify({ to, subject, body: bodyHtml })
   });
 }
 function handleRelance(factureId)          {} // TODO: BRANCHER N8N ICI
@@ -1645,7 +1645,12 @@ function loadAirtableMailDetail(id) {
   document.getElementById('mail-d-action').textContent = f.Action || '—';
   const score = f.Urgence_Score;
   document.getElementById('mail-d-score').innerHTML = score != null ? `<span style="font-weight:600;color:${score >= 7 ? 'var(--danger)' : score >= 4 ? 'var(--warn)' : 'var(--muted)'}">${score}/10</span>` : '—';
-  document.getElementById('mail-d-reply').innerHTML = f.Resume || '<span style="color:var(--muted)">Résumé non disponible</span>';
+  const replyEl = document.getElementById('mail-d-reply');
+  if (f.Resume) {
+    replyEl.textContent = f.Resume;
+  } else {
+    replyEl.innerHTML = '<span style="color:var(--muted);font-size:12px">Réponse non disponible</span>';
+  }
   showView('mail-detail');
 }
 </script>
