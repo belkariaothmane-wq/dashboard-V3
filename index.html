@@ -493,14 +493,17 @@
       <div class="dtl-row"><span class="dtl-k">Objet</span><span class="dtl-v" id="mail-d-subj" style="max-width:180px;text-align:right;"></span></div>
       <div class="dtl-row"><span class="dtl-k">Reçu</span><span class="dtl-v" id="mail-d-time"></span></div>
       <div class="dtl-row"><span class="dtl-k">Catégorie</span><span class="dtl-v" id="mail-d-cat"></span></div>
+      <div class="dtl-row"><span class="dtl-k">Priorité</span><span class="dtl-v" id="mail-d-priorite"></span></div>
+      <div class="dtl-row"><span class="dtl-k">Action</span><span class="dtl-v" id="mail-d-action"></span></div>
+      <div class="dtl-row"><span class="dtl-k">Score urgence</span><span class="dtl-v" id="mail-d-score"></span></div>
     </div>
     <div style="background:var(--card);border-radius:12px;border:1px solid var(--border);padding:16px;margin-bottom:12px;">
       <div class="dtl-card-title">Message</div>
       <div style="font-size:14px;line-height:1.7;color:var(--text)" id="mail-d-body"></div>
     </div>
     <div class="dtl-card">
-      <div class="dtl-card-title">Réponse préparée par l'assistant IA</div>
-      <div style="font-size:13px;line-height:1.65;color:var(--text)" id="mail-d-reply"></div>
+      <div class="dtl-card-title">Résumé IA</div>
+      <div style="font-size:13px;line-height:1.65;color:var(--text);font-style:italic" id="mail-d-reply"></div>
     </div>
     <button class="btn-p" id="mail-d-btn-send" onclick="sendMailReply()">Envoyer cette réponse</button>
     <button class="btn-s" onclick="openSheet('edit-reply')">Modifier avant d'envoyer</button>
@@ -1548,7 +1551,10 @@ function atMailItemHTML(record, prefix) {
     <div class="mail-top"><span class="mail-sender">${sender}</span><span class="mail-time">${time}</span></div>
     <div class="mail-subj">${f.Objet || '(sans objet)'}</div>
     <div class="mail-prev">${f.Extrait || ''}</div>
-    <span class="badge ${catBadge(cat)}">${cat}</span>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+      <span class="badge ${catBadge(cat)}">${cat}</span>
+      ${f.Priorite === 'haute' ? '<span class="badge bd-danger">Urgent</span>' : ''}
+    </div>
   </div>`;
 }
 
@@ -1593,7 +1599,13 @@ function loadAirtableMailDetail(id) {
   document.getElementById('mail-d-time').textContent = f.Date ? new Date(f.Date).toLocaleString('fr') : '';
   document.getElementById('mail-d-cat').innerHTML = `<span class="badge ${catBadge(cat)}">${cat}</span>`;
   document.getElementById('mail-d-body').innerHTML = f.Extrait || '(extrait non disponible)';
-  document.getElementById('mail-d-reply').innerHTML = '';
+  const priorite = f.Priorite || '';
+  const prioriteClass = priorite === 'haute' ? 'bd-danger' : priorite === 'moyenne' ? 'bd-warn' : 'bd-neutral';
+  document.getElementById('mail-d-priorite').innerHTML = priorite ? `<span class="badge ${prioriteClass}">${priorite}</span>` : '<span style="color:var(--muted);font-size:12px">—</span>';
+  document.getElementById('mail-d-action').textContent = f.Action || '—';
+  const score = f.Urgence_Score;
+  document.getElementById('mail-d-score').innerHTML = score != null ? `<span style="font-weight:600;color:${score >= 7 ? 'var(--danger)' : score >= 4 ? 'var(--warn)' : 'var(--muted)'}">${score}/10</span>` : '—';
+  document.getElementById('mail-d-reply').innerHTML = f.Resume || '<span style="color:var(--muted)">Résumé non disponible</span>';
   showView('mail-detail');
 }
 </script>
