@@ -525,31 +525,8 @@
     <span class="hdr-back-title">Devis</span>
   </header>
   <div class="sec" style="margin-top:16px">
-    <div class="card-list">
-      <div class="li" onclick="showView('devis-detail','berger')">
-        <div class="li-icon ic-warn"><i data-lucide="file-text" width="15" height="15"></i></div>
-        <div class="li-body">
-          <div class="li-label">Villa Garance — Mme Berger</div>
-          <div class="li-sub">2 400 € · Envoyé le 17 mai · sans réponse</div>
-        </div>
-        <span class="badge bd-warn" id="badge-devis-berger">En attente</span>
-      </div>
-      <div class="li" onclick="showView('devis-detail','rousseau')">
-        <div class="li-icon ic-accent"><i data-lucide="file-text" width="15" height="15"></i></div>
-        <div class="li-body">
-          <div class="li-label">Robinetterie bureaux — Cabinet Rousseau</div>
-          <div class="li-sub">1 840 € · Envoyé le 14 mai</div>
-        </div>
-        <span class="badge bd-accent" id="badge-devis-rousseau">Accepté</span>
-      </div>
-      <div class="li" onclick="showView('devis-detail','vidal')">
-        <div class="li-icon ic-neutral"><i data-lucide="file-text" width="15" height="15"></i></div>
-        <div class="li-body">
-          <div class="li-label">Diagnostic fuite — M. Vidal</div>
-          <div class="li-sub">350 € · Brouillon · non encore envoyé</div>
-        </div>
-        <span class="badge bd-neutral" id="badge-devis-vidal">Brouillon</span>
-      </div>
+    <div class="card-list" id="at-devis-container">
+      <div class="empty">Chargement...</div>
     </div>
   </div>
 </div>
@@ -590,27 +567,17 @@
   </header>
   <div class="sec" style="margin-top:16px">
     <div class="sec-hdr"><span class="sec-title">Impayées</span></div>
-    <div class="card-list">
-      <div class="li" onclick="showView('facture-detail','dupont')">
-        <div class="li-icon ic-danger"><i data-lucide="alert-circle" width="15" height="15"></i></div>
-        <div class="li-body">
-          <div class="li-label">F-2024-187 — Dupont SARL</div>
-          <div class="li-sub">1 840 € · Échéance 8 mai · 12 jours de retard</div>
-        </div>
-        <span class="badge bd-danger" id="badge-fac-dupont">En retard</span>
-      </div>
-      <div class="li" onclick="showView('facture-detail','martin')">
-        <div class="li-icon ic-warn"><i data-lucide="clock" width="15" height="15"></i></div>
-        <div class="li-body">
-          <div class="li-label">F-2024-192 — Martin SARL</div>
-          <div class="li-sub">880 € · Échéance 25 mai · dans 5 jours</div>
-        </div>
-        <span class="badge bd-warn" id="badge-fac-martin">À relancer</span>
-      </div>
+    <div class="card-list" id="at-factures-impayes">
+      <div class="empty">Chargement...</div>
     </div>
   </div>
   <div class="sec" style="margin-top:16px">
     <div class="sec-hdr"><span class="sec-title">Payées ce mois</span></div>
+    <div class="card-list" id="at-factures-payees">
+      <div class="empty">Chargement...</div>
+    </div>
+  </div>
+  <div class="sec" style="display:none">
     <div class="card-list">
       <div class="li" onclick="showView('facture-detail','vidal')">
         <div class="li-icon ic-accent"><i data-lucide="check-circle" width="15" height="15"></i></div>
@@ -1199,6 +1166,8 @@ function showView(name, param) {
   if (name === 'facture-detail' && param) loadFacDetail(param);
   if (name === 'client-detail' && param) loadClientDetail(param);
   if (name === 'stats') renderBarChart();
+  if (name === 'devis') loadDevisFromAirtable();
+  if (name === 'factures') loadFacturesFromAirtable();
 
   // Hide all views
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -1532,6 +1501,142 @@ function renderBarChart() {
   container.dataset.rendered = '1';
 }
 
+// ── Devis & Factures Airtable ──────────────────────────────────
+const DEVIS_PROXY_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-devis';
+const FACTURES_PROXY_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-factures';
+const AIRTABLE_DEVIS = {};
+const AIRTABLE_FACTURES = {};
+
+function devisStatutBadgeClass(s) {
+  return { 'Brouillon':'bd-neutral','En attente':'bd-warn','Accepté':'bd-accent','Refusé':'bd-danger' }[s] || 'bd-neutral';
+}
+function devisStatutIconClass(s) {
+  return { 'Brouillon':'ic-neutral','En attente':'ic-warn','Accepté':'ic-accent','Refusé':'ic-danger' }[s] || 'ic-neutral';
+}
+function facStatutBadgeClass(s) {
+  return { 'Envoyée':'bd-blue','À relancer':'bd-warn','En retard':'bd-danger','Payée':'bd-accent' }[s] || 'bd-neutral';
+}
+
+function atDevisItemHTML(record) {
+  const f = record.fields; const id = record.id;
+  const statut = f.Statut || 'Brouillon';
+  const montant = f.Montant_HT ? `${Number(f.Montant_HT).toLocaleString('fr')} € HT` : '';
+  const date = f.Date_Envoi ? new Date(f.Date_Envoi).toLocaleDateString('fr', { day:'2-digit', month:'short' }) : 'Non envoyé';
+  return `<div class="li" onclick="loadAirtableDevisDetail('${id}')">
+    <div class="li-icon ${devisStatutIconClass(statut)}"><i data-lucide="file-text" width="15" height="15"></i></div>
+    <div class="li-body">
+      <div class="li-label">${f.Objet || '(sans objet)'}</div>
+      <div class="li-sub">${f.Client || ''}${montant ? ' · ' + montant : ''} · ${date}</div>
+    </div>
+    <span class="badge ${devisStatutBadgeClass(statut)}">${statut}</span>
+  </div>`;
+}
+
+function atFactureItemHTML(record) {
+  const f = record.fields; const id = record.id;
+  const statut = f.Statut || 'Envoyée';
+  const montant = f.Montant_TTC ? `${Number(f.Montant_TTC).toLocaleString('fr')} € TTC` : '';
+  const echeance = f.Date_Echeance ? new Date(f.Date_Echeance).toLocaleDateString('fr', { day:'2-digit', month:'short' }) : '';
+  const iconClass = statut === 'En retard' ? 'ic-danger' : statut === 'À relancer' ? 'ic-warn' : statut === 'Payée' ? 'ic-accent' : 'ic-neutral';
+  const icon = statut === 'Payée' ? 'check-circle' : statut === 'En retard' ? 'alert-circle' : 'clock';
+  return `<div class="li" onclick="loadAirtableFactureDetail('${id}')">
+    <div class="li-icon ${iconClass}"><i data-lucide="${icon}" width="15" height="15"></i></div>
+    <div class="li-body">
+      <div class="li-label">${f.Numero ? f.Numero + ' — ' : ''}${f.Client || ''}</div>
+      <div class="li-sub">${montant}${echeance ? ' · Échéance ' + echeance : ''}</div>
+    </div>
+    <span class="badge ${facStatutBadgeClass(statut)}">${statut}</span>
+  </div>`;
+}
+
+async function loadDevisFromAirtable() {
+  try {
+    const res = await fetch(DEVIS_PROXY_URL);
+    if (!res.ok) return;
+    const data = await res.json();
+    const records = (data.records || []).filter(r => r.fields && r.fields.Client);
+    const container = document.getElementById('at-devis-container');
+    if (!container) return;
+    if (!records.length) { container.innerHTML = '<div class="empty">Aucun devis pour l\'instant</div>'; return; }
+    records.forEach(r => { AIRTABLE_DEVIS[r.id] = r; });
+    container.innerHTML = records.map(r => atDevisItemHTML(r)).join('');
+    lucide.createIcons();
+    const enAttente = records.filter(r => ['En attente','Brouillon'].includes(r.fields.Statut)).length;
+    const kpi = document.getElementById('kpi-devis');
+    if (kpi) kpi.textContent = enAttente;
+  } catch (e) {}
+}
+
+async function loadFacturesFromAirtable() {
+  try {
+    const res = await fetch(FACTURES_PROXY_URL);
+    if (!res.ok) return;
+    const data = await res.json();
+    const records = (data.records || []).filter(r => r.fields && r.fields.Client);
+    if (!records.length) {
+      const ci = document.getElementById('at-factures-impayes');
+      const cp = document.getElementById('at-factures-payees');
+      if (ci) ci.innerHTML = '<div class="empty">Aucune facture impayée</div>';
+      if (cp) cp.innerHTML = '<div class="empty">Aucune facture payée</div>';
+      return;
+    }
+    records.forEach(r => { AIRTABLE_FACTURES[r.id] = r; });
+    const impayes = records.filter(r => ['En retard','À relancer','Envoyée'].includes(r.fields.Statut));
+    const payees = records.filter(r => r.fields.Statut === 'Payée');
+    const ci = document.getElementById('at-factures-impayes');
+    const cp = document.getElementById('at-factures-payees');
+    if (ci) ci.innerHTML = impayes.length ? impayes.map(r => atFactureItemHTML(r)).join('') : '<div class="empty">Aucune facture impayée</div>';
+    if (cp) cp.innerHTML = payees.length ? payees.map(r => atFactureItemHTML(r)).join('') : '<div class="empty">Aucune facture payée</div>';
+    lucide.createIcons();
+    const totalImpayes = impayes.reduce((s, r) => s + (r.fields.Montant_TTC || 0), 0);
+    const kpiI = document.getElementById('kpi-impayes');
+    const kpiM = document.getElementById('kpi-impayes-mt');
+    if (kpiI) kpiI.textContent = impayes.length;
+    if (kpiM && totalImpayes) kpiM.textContent = Number(totalImpayes).toLocaleString('fr') + ' €';
+  } catch (e) {}
+}
+
+function loadAirtableDevisDetail(id) {
+  const record = AIRTABLE_DEVIS[id];
+  if (!record) return;
+  const f = record.fields;
+  STATE.currentDevis = id;
+  const statut = f.Statut || 'Brouillon';
+  document.getElementById('devis-d-title').textContent = `Devis — ${f.Client || ''}`;
+  document.getElementById('devis-d-client').textContent = f.Client || '';
+  document.getElementById('devis-d-objet').textContent = f.Objet || '';
+  document.getElementById('devis-d-montant').textContent = f.Montant_HT ? `${Number(f.Montant_HT).toLocaleString('fr')} € HT` : '—';
+  document.getElementById('devis-d-date').textContent = f.Date_Envoi ? new Date(f.Date_Envoi).toLocaleDateString('fr') : 'Non envoyé';
+  document.getElementById('devis-d-statut').innerHTML = `<span class="badge ${devisStatutBadgeClass(statut)}">${statut}</span>`;
+  const prEl = document.getElementById('devis-d-prestations');
+  prEl.innerHTML = f.Notes ? `<div style="font-size:13px;line-height:1.6;color:var(--text);white-space:pre-line">${f.Notes}</div>` : '<div style="color:var(--muted);font-size:12px">Aucune prestation renseignée</div>';
+  const btn = document.getElementById('devis-d-btn');
+  if (statut === 'Brouillon') btn.textContent = 'Envoyer le devis';
+  else if (statut === 'En attente') btn.textContent = 'Envoyer une relance';
+  else if (statut === 'Accepté') btn.textContent = 'Générer la facture';
+  else { btn.style.display = 'none'; showView('devis-detail'); return; }
+  btn.style.display = 'block';
+  showView('devis-detail');
+}
+
+function loadAirtableFactureDetail(id) {
+  const record = AIRTABLE_FACTURES[id];
+  if (!record) return;
+  const f = record.fields;
+  STATE.currentFac = id;
+  const statut = f.Statut || 'Envoyée';
+  document.getElementById('fac-d-title').textContent = f.Numero || 'Facture';
+  document.getElementById('fac-d-client').textContent = f.Client || '';
+  document.getElementById('fac-d-montant').textContent = f.Montant_TTC ? `${Number(f.Montant_TTC).toLocaleString('fr')} € TTC` : '—';
+  document.getElementById('fac-d-emise').textContent = f.Date_Emission ? new Date(f.Date_Emission).toLocaleDateString('fr') : '—';
+  document.getElementById('fac-d-echeance').textContent = f.Date_Echeance ? new Date(f.Date_Echeance).toLocaleDateString('fr') : '—';
+  document.getElementById('fac-d-statut').innerHTML = `<span class="badge ${facStatutBadgeClass(statut)}">${statut}</span>`;
+  const relancable = ['En retard','À relancer','Envoyée'].includes(statut);
+  document.getElementById('fac-d-btn-relance').style.display = relancable ? 'block' : 'none';
+  document.getElementById('fac-d-btn-paye').style.display = relancable ? 'block' : 'none';
+  showView('facture-detail');
+}
+
 // ── Hooks n8n Phase 2 ──────────────────────────────────────────
 const SEND_REPLY_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-send-reply';
 
@@ -1541,7 +1646,11 @@ async function handleSendMail(mailId, reponse) {
   const f = record.fields;
   const to = f.Expediteur || '';
   const subject = 'Re: ' + (f.Objet || '');
-  const bodyHtml = (reponse || '').replace(/\n/g, '<br>');
+  const text = (reponse || '').trim();
+  const paras = text.split(/\n\n+/);
+  const bodyHtml = '<div style="font-family:-apple-system,Arial,sans-serif;font-size:14px;line-height:1.7;color:#111827;max-width:600px">' +
+    paras.map(p => `<p style="margin:0 0 16px 0">${p.replace(/\n/g, '<br>')}</p>`).join('') +
+    '</div>';
   await fetch(SEND_REPLY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
