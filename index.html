@@ -1265,17 +1265,22 @@ function markRead(id) {
   });
 }
 
-function sendMailReply() {
+async function sendMailReply() {
   const btn = document.getElementById('mail-d-btn-send');
   btn.textContent = 'Envoi en cours...';
   btn.classList.add('loading');
-  setTimeout(() => {
+  const replyHtml = document.getElementById('mail-d-reply').innerHTML;
+  try {
+    await handleSendMail(STATE.currentMail, replyHtml);
     btn.textContent = 'Envoyé';
-    btn.style.background = 'var(--accent)';
     showToast('Réponse envoyée');
-    // handleSendMail(STATE.currentMail, MAILS[STATE.currentMail]?.reply); // TODO: N8N
-    setTimeout(() => goBack(), 1200);
-  }, 1400);
+  } catch (e) {
+    btn.textContent = 'Erreur — réessayer';
+    btn.classList.remove('loading');
+    showToast('Erreur lors de l\'envoi');
+    return;
+  }
+  setTimeout(() => goBack(), 1200);
 }
 
 // ── Devis detail ───────────────────────────────────────────────
@@ -1528,7 +1533,21 @@ function renderBarChart() {
 }
 
 // ── Hooks n8n Phase 2 ──────────────────────────────────────────
-function handleSendMail(mailId, reponse)   {} // TODO: BRANCHER N8N ICI
+const SEND_REPLY_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-send-reply';
+
+async function handleSendMail(mailId, reponse) {
+  const record = AIRTABLE_MAILS[mailId];
+  if (!record) return; // mail de démo, pas d'envoi réel
+  const f = record.fields;
+  await fetch(SEND_REPLY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      gmail_id: f.ID_Gmail || '',
+      body: reponse || ''
+    })
+  });
+}
 function handleRelance(factureId)          {} // TODO: BRANCHER N8N ICI
 function handleCreateFacture(chantierData) {} // TODO: BRANCHER N8N ICI
 function handleNewDevis(formData)          {} // TODO: BRANCHER N8N ICI
