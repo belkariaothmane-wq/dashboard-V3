@@ -214,6 +214,44 @@
     .notif-dot2 { width:8px; height:8px; border-radius:50%; background:var(--accent); flex-shrink:0; margin-top:5px; }
     .notif-text { font-size:13px; line-height:1.5; }
     .notif-time { font-size:11px; color:var(--muted); margin-top:3px; }
+
+    /* ── Clients ── */
+    .client-item { display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s; }
+    .client-item:last-child { border-bottom:none; }
+    .client-item:active { background:var(--bg); }
+    .client-av { width:38px; height:38px; border-radius:50%; background:var(--primary); color:white; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .client-av.pro { background:#1D4ED8; }
+    .client-body { flex:1; min-width:0; }
+    .client-name { font-size:14px; font-weight:500; }
+    .client-meta { font-size:12px; color:var(--muted); margin-top:2px; }
+    .client-actions { display:flex; gap:8px; margin-top:12px; }
+    .client-action-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--card); font-size:13px; font-weight:500; cursor:pointer; color:var(--text); transition:background .12s; }
+    .client-action-btn:active { background:var(--bg); }
+    .client-action-btn.primary { background:var(--accent); color:white; border-color:var(--accent); }
+    .chantier-item { padding:12px 0; border-bottom:1px solid var(--border); }
+    .chantier-item:last-child { border-bottom:none; }
+    .chantier-date { font-size:11px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.05em; }
+    .chantier-objet { font-size:14px; font-weight:500; margin-top:2px; }
+
+    /* ── Statistiques ── */
+    .stat-kpi-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .stat-kpi { background:var(--card); border-radius:12px; border:1px solid var(--border); padding:14px; box-shadow:var(--shadow); }
+    .stat-kpi-val { font-size:22px; font-weight:700; letter-spacing:-.02em; color:var(--accent); }
+    .stat-kpi-lbl { font-size:12px; color:var(--muted); margin-top:3px; }
+    .stat-kpi-trend { font-size:11px; font-weight:500; color:var(--accent); margin-top:3px; }
+    .stat-kpi-trend.neg { color:var(--danger); }
+    .bar-chart { display:flex; align-items:flex-end; gap:6px; height:100px; margin-top:8px; }
+    .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .bar-fill { width:100%; background:var(--accent-light); border-radius:4px 4px 0 0; transition:height .4s ease; min-height:4px; position:relative; cursor:default; }
+    .bar-fill.current { background:var(--accent); }
+    .bar-val { font-size:9px; font-weight:600; color:var(--accent); }
+    .bar-lbl { font-size:9px; color:var(--muted); }
+    .top-client-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+    .top-client-item:last-child { border-bottom:none; }
+    .top-rank { width:22px; height:22px; border-radius:50%; background:var(--accent-light); color:var(--accent); font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .top-rank.gold { background:#FEF3C7; color:#B45309; }
+    .top-client-name { flex:1; font-size:13px; font-weight:500; }
+    .top-client-ca { font-size:13px; font-weight:600; color:var(--accent); }
   </style>
 </head>
 <body>
@@ -301,7 +339,7 @@
       <span class="sec-title">Boîte de réception</span>
       <span class="sec-count" id="mail-count-home">4 non lus</span>
     </div>
-    <div class="card-list">
+    <div class="card-list" id="home-mails-container">
       <div class="mail-item" id="home-mail-blanc" onclick="showView('mail-detail', 'blanc')">
         <div class="mail-top"><span class="mail-sender">Mme Blanc</span><span class="mail-time">09:14</span></div>
         <div class="mail-subj">Demande de devis — rénovation salle de bain</div>
@@ -405,7 +443,7 @@
     <span class="hdr-back-title">Boîte de réception</span>
   </header>
   <div class="sec" style="margin-top:16px">
-    <div class="card-list">
+    <div class="card-list" id="all-mails-container">
       <div class="mail-item" id="mail-list-blanc" onclick="showView('mail-detail','blanc')">
         <div class="mail-top"><span class="mail-sender">Mme Blanc</span><span class="mail-time">09:14</span></div>
         <div class="mail-subj">Demande de devis — rénovation salle de bain</div>
@@ -712,27 +750,27 @@
     </div>
   </div>
   <div class="card-list" style="margin:0 16px">
-    <div class="plus-item" onclick="showToast('Profil — bientôt disponible')">
+    <div class="plus-item" onclick="openSheet('edit-profil')">
       <div class="plus-item-ico"><i data-lucide="user" width="16" height="16"></i></div>
       <span class="plus-item-lbl">Mon profil</span>
       <i data-lucide="chevron-right" width="16" height="16" style="color:var(--muted)"></i>
     </div>
-    <div class="plus-item" onclick="showToast('Mes clients — bientôt disponible')">
+    <div class="plus-item" onclick="showView('clients')">
       <div class="plus-item-ico"><i data-lucide="users" width="16" height="16"></i></div>
       <span class="plus-item-lbl">Mes clients</span>
       <i data-lucide="chevron-right" width="16" height="16" style="color:var(--muted)"></i>
     </div>
-    <div class="plus-item" onclick="showToast('Statistiques — bientôt disponible')">
+    <div class="plus-item" onclick="showView('stats')">
       <div class="plus-item-ico"><i data-lucide="bar-chart-2" width="16" height="16"></i></div>
       <span class="plus-item-lbl">Statistiques</span>
       <i data-lucide="chevron-right" width="16" height="16" style="color:var(--muted)"></i>
     </div>
-    <div class="plus-item" onclick="showToast('Paramètres — bientôt disponible')">
+    <div class="plus-item" onclick="openSheet('parametres')">
       <div class="plus-item-ico"><i data-lucide="settings" width="16" height="16"></i></div>
       <span class="plus-item-lbl">Paramètres</span>
       <i data-lucide="chevron-right" width="16" height="16" style="color:var(--muted)"></i>
     </div>
-    <div class="plus-item" onclick="showToast('Assistance — bientôt disponible')">
+    <div class="plus-item" onclick="showToast('Aide en ligne — bientôt disponible')">
       <div class="plus-item-ico"><i data-lucide="help-circle" width="16" height="16"></i></div>
       <span class="plus-item-lbl">Aide & assistance</span>
       <i data-lucide="chevron-right" width="16" height="16" style="color:var(--muted)"></i>
@@ -740,6 +778,178 @@
   </div>
   <div style="padding:24px 16px 0">
     <button class="btn-s" onclick="goBack()">Retour à l'accueil</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     VUE : CLIENTS
+════════════════════════════════════════════ -->
+<div id="view-clients" class="view">
+  <header class="hdr-back">
+    <button class="back-btn" onclick="goBack()"><i data-lucide="chevron-left" width="18" height="18"></i> Retour</button>
+    <span class="hdr-back-title">Mes clients</span>
+  </header>
+  <div class="sec" style="margin-top:16px">
+    <div class="card-list">
+      <div class="client-item" onclick="showView('client-detail','berger')">
+        <div class="client-av">SB</div>
+        <div class="client-body">
+          <div class="client-name">Mme Sophie Berger</div>
+          <div class="client-meta">Particulier · 2 chantiers · <span style="color:var(--warn)">1 devis en attente</span></div>
+        </div>
+        <i data-lucide="chevron-right" width="16" height="16" style="color:var(--muted)"></i>
+      </div>
+      <div class="client-item" onclick="showView('client-detail','dupont')">
+        <div class="client-av pro">DS</div>
+        <div class="client-body">
+          <div class="client-name">Dupont SARL</div>
+          <div class="client-meta">Professionnel · 1 chantier · <span style="color:var(--danger)">1 facture en retard</span></div>
+        </div>
+        <i data-lucide="chevron-right" width="16" height="16" style="color:var(--muted)"></i>
+      </div>
+      <div class="client-item" onclick="showView('client-detail','rousseau')">
+        <div class="client-av pro">CR</div>
+        <div class="client-body">
+          <div class="client-name">Cabinet Rousseau & Fils</div>
+          <div class="client-meta">Professionnel · 1 chantier en cours</div>
+        </div>
+        <i data-lucide="chevron-right" width="16" height="16" style="color:var(--muted)"></i>
+      </div>
+      <div class="client-item" onclick="showView('client-detail','vidal')">
+        <div class="client-av">PV</div>
+        <div class="client-body">
+          <div class="client-name">M. Patrick Vidal</div>
+          <div class="client-meta">Particulier · 1 chantier planifié</div>
+        </div>
+        <i data-lucide="chevron-right" width="16" height="16" style="color:var(--muted)"></i>
+      </div>
+      <div class="client-item" onclick="showView('client-detail','martin')">
+        <div class="client-av pro">MS</div>
+        <div class="client-body">
+          <div class="client-name">Martin SARL</div>
+          <div class="client-meta">Professionnel · 1 chantier · <span style="color:var(--warn)">1 facture à relancer</span></div>
+        </div>
+        <i data-lucide="chevron-right" width="16" height="16" style="color:var(--muted)"></i>
+      </div>
+    </div>
+  </div>
+  <div class="sec">
+    <button class="btn-p" onclick="openSheet('new-client')">+ Ajouter un client</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     VUE : DÉTAIL CLIENT
+════════════════════════════════════════════ -->
+<div id="view-client-detail" class="view">
+  <header class="hdr-back">
+    <button class="back-btn" onclick="goBack()"><i data-lucide="chevron-left" width="18" height="18"></i> Clients</button>
+    <span class="hdr-back-title" id="client-d-title">Client</span>
+  </header>
+  <div class="dtl">
+    <!-- Carte profil -->
+    <div style="background:var(--card);border-radius:12px;border:1px solid var(--border);padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px">
+      <div class="client-av" id="client-d-av" style="width:52px;height:52px;font-size:17px"></div>
+      <div>
+        <div style="font-size:17px;font-weight:700;letter-spacing:-.01em" id="client-d-name"></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px" id="client-d-type"></div>
+      </div>
+    </div>
+    <!-- Contact -->
+    <div class="dtl-card">
+      <div class="dtl-card-title">Contact</div>
+      <div class="dtl-row"><span class="dtl-k">Téléphone</span><span class="dtl-v" id="client-d-tel" style="color:var(--accent)"></span></div>
+      <div class="dtl-row"><span class="dtl-k">Email</span><span class="dtl-v" id="client-d-email" style="font-size:12px;max-width:180px;text-align:right"></span></div>
+      <div class="dtl-row"><span class="dtl-k">Adresse</span><span class="dtl-v" id="client-d-adresse" style="font-size:12px;max-width:160px;text-align:right"></span></div>
+    </div>
+    <!-- Actions -->
+    <div class="client-actions" style="margin-bottom:12px">
+      <button class="client-action-btn" onclick="showToast('Appel simulé')">
+        <i data-lucide="phone" width="14" height="14"></i> Appeler
+      </button>
+      <button class="client-action-btn" onclick="showToast('Mail simulé')">
+        <i data-lucide="mail" width="14" height="14"></i> Envoyer un mail
+      </button>
+      <button class="client-action-btn primary" onclick="openSheet('new-devis')">
+        <i data-lucide="file-text" width="14" height="14"></i> Devis
+      </button>
+    </div>
+    <!-- Historique chantiers -->
+    <div class="dtl-card">
+      <div class="dtl-card-title">Historique chantiers</div>
+      <div id="client-d-chantiers"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     VUE : STATISTIQUES
+════════════════════════════════════════════ -->
+<div id="view-stats" class="view">
+  <header class="hdr-back">
+    <button class="back-btn" onclick="goBack()"><i data-lucide="chevron-left" width="18" height="18"></i> Retour</button>
+    <span class="hdr-back-title">Statistiques</span>
+  </header>
+  <div class="sec" style="margin-top:16px">
+    <div class="stat-kpi-row">
+      <div class="stat-kpi">
+        <div class="stat-kpi-val">7 240 €</div>
+        <div class="stat-kpi-lbl">CA mai 2026</div>
+        <div class="stat-kpi-trend">+12 % vs avril</div>
+      </div>
+      <div class="stat-kpi">
+        <div class="stat-kpi-val">5</div>
+        <div class="stat-kpi-lbl">Clients actifs</div>
+        <div class="stat-kpi-trend">+1 ce mois</div>
+      </div>
+      <div class="stat-kpi">
+        <div class="stat-kpi-val">2 720 €</div>
+        <div class="stat-kpi-lbl">Impayés total</div>
+        <div class="stat-kpi-trend neg">2 factures</div>
+      </div>
+      <div class="stat-kpi">
+        <div class="stat-kpi-val">4 200 €</div>
+        <div class="stat-kpi-lbl">Devis en cours</div>
+        <div class="stat-kpi-trend">3 en attente</div>
+      </div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-title">CA mensuel (6 mois)</span></div>
+    <div class="card-list" style="padding:16px">
+      <div class="bar-chart" id="bar-chart"></div>
+      <div style="display:flex;justify-content:space-between;margin-top:2px" id="bar-labels"></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-title">Top clients</span></div>
+    <div class="card-list" style="padding:0 16px">
+      <div class="top-client-item">
+        <div class="top-rank gold">1</div>
+        <span class="top-client-name">Cabinet Rousseau & Fils</span>
+        <span class="top-client-ca">11 200 €</span>
+      </div>
+      <div class="top-client-item">
+        <div class="top-rank">2</div>
+        <span class="top-client-name">Mme Sophie Berger</span>
+        <span class="top-client-ca">5 700 €</span>
+      </div>
+      <div class="top-client-item">
+        <div class="top-rank">3</div>
+        <span class="top-client-name">Dupont SARL</span>
+        <span class="top-client-ca">3 840 €</span>
+      </div>
+      <div class="top-client-item">
+        <div class="top-rank">4</div>
+        <span class="top-client-name">Martin SARL</span>
+        <span class="top-client-ca">2 200 €</span>
+      </div>
+      <div class="top-client-item">
+        <div class="top-rank">5</div>
+        <span class="top-client-name">M. Patrick Vidal</span>
+        <span class="top-client-ca">2 100 €</span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -787,6 +997,7 @@
 ════════════════════════════════════════════ -->
 <script>
 lucide.createIcons();
+loadMailsFromAirtable();
 
 // ── State ──────────────────────────────────────────────────────
 const STATE = {
@@ -879,6 +1090,54 @@ const FACTURES = {
   berger: { title:'F-2024-183', client:'Mme Berger', montant:'3 300 € TTC', emise:'28 avril 2026', echeance:'10 mai 2026', statut:'Payée', relancable:false }
 };
 
+const CLIENTS = {
+  berger: {
+    nom:'Mme Sophie Berger', initiales:'SB', type:'Particulier', pro:false,
+    tel:'06 12 34 56 78', email:'s.berger@email.fr', adresse:'14 rue des Tilleuls, Vincennes',
+    chantiers:[
+      { date:'Mai 2026', objet:'Rénovation salle de bain', statut:'En cours', montant:'2 400 €' },
+      { date:'Janvier 2025', objet:'Réparation fuite cuisine', statut:'Terminé', montant:'380 €' }
+    ]
+  },
+  dupont: {
+    nom:'Dupont SARL', initiales:'DS', type:'Professionnel', pro:true,
+    tel:'01 42 00 11 22', email:'compta@dupont.fr', adresse:'15 rue du Commerce, Paris 15e',
+    chantiers:[
+      { date:'Avril 2026', objet:'Installation sanitaires bureaux', statut:'Terminé', montant:'1 840 €' },
+      { date:'Octobre 2025', objet:'Dépannage urgent — fuite tuyauterie', statut:'Terminé', montant:'560 €' }
+    ]
+  },
+  rousseau: {
+    nom:'Cabinet Rousseau & Fils', initiales:'CR', type:'Professionnel', pro:true,
+    tel:'01 56 78 90 12', email:'contact@rousseau.fr', adresse:'3 rue des Pins, Vincennes',
+    chantiers:[
+      { date:'Mai 2026', objet:'Pose robinetterie bureaux', statut:'En cours', montant:'1 840 €' },
+      { date:'Novembre 2025', objet:'Maintenance annuelle', statut:'Terminé', montant:'980 €' },
+      { date:'Mars 2025', objet:'Rénovation local technique', statut:'Terminé', montant:'4 200 €' }
+    ]
+  },
+  vidal: {
+    nom:'M. Patrick Vidal', initiales:'PV', type:'Particulier', pro:false,
+    tel:'06 98 76 54 32', email:'p.vidal@email.fr', adresse:'7 avenue Gambetta, Montreuil',
+    chantiers:[
+      { date:'Mai 2026', objet:'Diagnostic fuite + intervention', statut:'Planifié', montant:'350 €' }
+    ]
+  },
+  martin: {
+    nom:'Martin SARL', initiales:'MS', type:'Professionnel', pro:true,
+    tel:'01 23 45 67 89', email:'compta@martin.fr', adresse:'22 bd de la Liberté, Paris 11e',
+    chantiers:[
+      { date:'Mars 2026', objet:'Maintenance annuelle contrat', statut:'Terminé', montant:'880 €' },
+      { date:'Septembre 2025', objet:'Remplacement chauffe-eau', statut:'Terminé', montant:'1 320 €' }
+    ]
+  }
+};
+
+const CA_DATA = [
+  { mois:'Déc', val:5200 }, { mois:'Jan', val:4800 }, { mois:'Fév', val:6100 },
+  { mois:'Mar', val:5900 }, { mois:'Avr', val:6460 }, { mois:'Mai', val:7240, current:true }
+];
+
 const SHEETS = {
   'relance-martin': {
     title:'Relance — Dupont SARL',
@@ -914,7 +1173,9 @@ const SHEETS = {
   'new-facture': { form:'new-facture' },
   'new-client': { form:'new-client' },
   'new-rappel': { form:'new-rappel' },
-  'edit-reply': { form:'edit-reply' }
+  'edit-reply': { form:'edit-reply' },
+  'edit-profil': { form:'edit-profil' },
+  'parametres': { form:'parametres' }
 };
 
 // ── Navigation ─────────────────────────────────────────────────
@@ -928,6 +1189,8 @@ function showView(name, param) {
   if (name === 'mail-detail' && param) loadMailDetail(param);
   if (name === 'devis-detail' && param) loadDevisDetail(param);
   if (name === 'facture-detail' && param) loadFacDetail(param);
+  if (name === 'client-detail' && param) loadClientDetail(param);
+  if (name === 'stats') renderBarChart();
 
   // Hide all views
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -1056,6 +1319,34 @@ function devisAction() {
   }, 1300);
 }
 
+// ── Client detail ──────────────────────────────────────────────
+function loadClientDetail(id) {
+  const c = CLIENTS[id];
+  if (!c) return;
+  document.getElementById('client-d-title').textContent = c.nom.split(' ').slice(-1)[0];
+  const av = document.getElementById('client-d-av');
+  av.textContent = c.initiales;
+  av.className = 'client-av' + (c.pro ? ' pro' : '');
+  av.style.cssText = 'width:52px;height:52px;font-size:17px';
+  document.getElementById('client-d-name').textContent = c.nom;
+  document.getElementById('client-d-type').textContent = c.type;
+  document.getElementById('client-d-tel').textContent = c.tel;
+  document.getElementById('client-d-email').textContent = c.email;
+  document.getElementById('client-d-adresse').textContent = c.adresse;
+  const chEl = document.getElementById('client-d-chantiers');
+  const statusMap = { 'En cours':'bd-warn', 'Terminé':'bd-accent', 'Planifié':'bd-blue' };
+  chEl.innerHTML = c.chantiers.map(ch => `
+    <div class="chantier-item">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="chantier-date">${ch.date}</div>
+        <span class="badge ${statusMap[ch.statut]||'bd-neutral'}">${ch.statut}</span>
+      </div>
+      <div class="chantier-objet">${ch.objet}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">${ch.montant}</div>
+    </div>`).join('');
+  lucide.createIcons();
+}
+
 // ── Facture detail ─────────────────────────────────────────────
 function loadFacDetail(id) {
   STATE.currentFac = id;
@@ -1153,6 +1444,25 @@ function buildForm(type) {
     'edit-reply': `<div class="sheet-handle"></div><div class="sheet-title">Modifier la réponse</div>
       <div class="fg"><label>Votre message</label><textarea style="min-height:160px" id="edit-reply-text">${MAILS[STATE.currentMail]?.reply?.replace(/<br>/g,'\n').replace(/<[^>]+>/g,'') || ''}</textarea></div>
       <button class="btn-p" onclick="formSubmit('Réponse modifiée envoyée')">Envoyer</button>
+      <button class="btn-s" onclick="closeSheet()">Annuler</button>`,
+    'edit-profil': `<div class="sheet-handle"></div><div class="sheet-title">Mon profil</div>
+      <div class="fg"><label>Prénom et nom</label><input type="text" value="Marc Lefèvre"></div>
+      <div class="fg"><label>Entreprise</label><input type="text" value="Lefèvre Plomberie"></div>
+      <div class="fg"><label>Téléphone</label><input type="tel" value="06 11 22 33 44"></div>
+      <div class="fg"><label>Email</label><input type="email" value="marc.lefevre@lefevre-plomberie.fr"></div>
+      <div class="fg"><label>SIRET</label><input type="text" value="823 456 789 00012"></div>
+      <button class="btn-p" onclick="formSubmit('Profil mis à jour')">Enregistrer</button>
+      <button class="btn-s" onclick="closeSheet()">Annuler</button>`,
+    'parametres': `<div class="sheet-handle"></div><div class="sheet-title">Paramètres</div>
+      <div class="fg"><label>Délai de relance automatique (jours)</label>
+        <select><option>7 jours</option><option selected>10 jours</option><option>15 jours</option><option>30 jours</option></select>
+      </div>
+      <div class="fg"><label>Email expéditeur des relances</label><input type="email" value="marc.lefevre@lefevre-plomberie.fr"></div>
+      <div class="fg"><label>Signature mail</label><textarea>Marc Lefèvre — Lefèvre Plomberie\nTél : 06 11 22 33 44</textarea></div>
+      <div class="fg"><label>TVA par défaut</label>
+        <select><option selected>10 %</option><option>20 %</option><option>Sans TVA</option></select>
+      </div>
+      <button class="btn-p" onclick="formSubmit('Paramètres enregistrés')">Enregistrer</button>
       <button class="btn-s" onclick="closeSheet()">Annuler</button>`
   };
   return forms[type] || '<div class="sheet-handle"></div><p style="padding:20px">Bientôt disponible</p><button class="btn-s" onclick="closeSheet()">Fermer</button>';
@@ -1193,12 +1503,98 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
+// ── Bar chart stats ────────────────────────────────────────────
+function renderBarChart() {
+  const container = document.getElementById('bar-chart');
+  if (!container || container.dataset.rendered) return;
+  const max = Math.max(...CA_DATA.map(d => d.val));
+  container.innerHTML = CA_DATA.map(d => {
+    const pct = Math.round((d.val / max) * 100);
+    return `<div class="bar-col">
+      <div class="bar-val">${d.current ? d.val/1000+'k' : ''}</div>
+      <div class="bar-fill${d.current?' current':''}" style="height:${pct}%"></div>
+      <div class="bar-lbl">${d.mois}</div>
+    </div>`;
+  }).join('');
+  container.dataset.rendered = '1';
+}
+
 // ── Hooks n8n Phase 2 ──────────────────────────────────────────
 function handleSendMail(mailId, reponse)   {} // TODO: BRANCHER N8N ICI
 function handleRelance(factureId)          {} // TODO: BRANCHER N8N ICI
 function handleCreateFacture(chantierData) {} // TODO: BRANCHER N8N ICI
 function handleNewDevis(formData)          {} // TODO: BRANCHER N8N ICI
 function handleNewClient(formData)         {} // TODO: BRANCHER N8N ICI
+
+// ── Mails via proxy n8n ──────────────────────────────────────────
+const MAILS_PROXY_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-mails';
+const AIRTABLE_MAILS = {};
+
+function formatMailTime(isoDate) {
+  const d = new Date(isoDate);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString())
+    return d.toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === new Date(now - 86400000).toDateString()) return 'Hier';
+  return d.toLocaleDateString('fr', { day: '2-digit', month: '2-digit' });
+}
+
+function atMailItemHTML(record, prefix) {
+  const f = record.fields;
+  const id = record.id;
+  const cat = f.Categorie || 'Autre';
+  const sender = (f.Expediteur || '').replace(/<[^>]+>/g, '').trim() || 'Inconnu';
+  const time = f.Date ? formatMailTime(f.Date) : '';
+  return `<div class="mail-item" id="${prefix}-${id}" onclick="loadAirtableMailDetail('${id}')">
+    <div class="mail-top"><span class="mail-sender">${sender}</span><span class="mail-time">${time}</span></div>
+    <div class="mail-subj">${f.Objet || '(sans objet)'}</div>
+    <div class="mail-prev">${f.Extrait || ''}</div>
+    <span class="badge ${catBadge(cat)}">${cat}</span>
+  </div>`;
+}
+
+async function loadMailsFromAirtable() {
+  try {
+    const res = await fetch(MAILS_PROXY_URL);
+    if (!res.ok) return;
+    const data = await res.json();
+    const records = (data.records || []).filter(r => r.fields && r.fields.Objet);
+    if (!records.length) return;
+
+    records.forEach(r => { AIRTABLE_MAILS[r.id] = r; });
+
+    const count = records.length;
+    STATE.mailCount = count;
+    const badge = document.getElementById('mail-nav-badge');
+    if (badge) { badge.textContent = count; badge.style.display = count ? '' : 'none'; }
+    const hc = document.getElementById('mail-count-home');
+    if (hc) hc.textContent = `${count} non lu${count > 1 ? 's' : ''}`;
+
+    const homeEl = document.getElementById('home-mails-container');
+    if (homeEl) homeEl.innerHTML = records.slice(0, 4).map(r => atMailItemHTML(r, 'home-at')).join('');
+
+    const allEl = document.getElementById('all-mails-container');
+    if (allEl) allEl.innerHTML = records.map(r => atMailItemHTML(r, 'at-mail')).join('');
+
+  } catch (e) { /* demo data reste visible en cas d'erreur */ }
+}
+
+function loadAirtableMailDetail(id) {
+  const record = AIRTABLE_MAILS[id];
+  if (!record) return;
+  const f = record.fields;
+  STATE.currentMail = id;
+  const cat = f.Categorie || 'Autre';
+  const sender = (f.Expediteur || '').replace(/<[^>]+>/g, '').trim() || 'Mail';
+  document.getElementById('mail-detail-title').textContent = sender.split(' ').pop();
+  document.getElementById('mail-d-from').textContent = f.Expediteur || '';
+  document.getElementById('mail-d-subj').textContent = f.Objet || '';
+  document.getElementById('mail-d-time').textContent = f.Date ? new Date(f.Date).toLocaleString('fr') : '';
+  document.getElementById('mail-d-cat').innerHTML = `<span class="badge ${catBadge(cat)}">${cat}</span>`;
+  document.getElementById('mail-d-body').innerHTML = f.Extrait || '(extrait non disponible)';
+  document.getElementById('mail-d-reply').innerHTML = '';
+  showView('mail-detail');
+}
 </script>
 </body>
 </html>
