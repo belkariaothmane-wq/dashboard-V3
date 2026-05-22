@@ -997,7 +997,6 @@
 ════════════════════════════════════════════ -->
 <script>
 lucide.createIcons();
-loadMailsFromAirtable();
 
 // ── State ──────────────────────────────────────────────────────
 const STATE = {
@@ -1578,6 +1577,8 @@ async function loadMailsFromAirtable() {
 
   } catch (e) { /* demo data reste visible en cas d'erreur */ }
 }
+
+loadMailsFromAirtable();
 
 function loadAirtableMailDetail(id) {
   const record = AIRTABLE_MAILS[id];
